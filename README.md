@@ -190,6 +190,15 @@ db.products.insertMany([
 
 ---
 
+## Logs des commits
+
+Générés avec la commande :
+```bash
+git log --pretty=format:"%h %ad | %s%d [%an]" --date=short > logs_projet.txt
+```
+
+Le fichier `logs_projet.txt` est disponible à la racine du projet.
+
 ## Conclusion
 
 Ce projet m'a permis de mettre en pratique :
