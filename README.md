@@ -199,6 +199,24 @@ git log --pretty=format:"%h %ad | %s%d [%an]" --date=short > logs_projet.txt
 
 Le fichier `logs_projet.txt` est disponible à la racine du projet.
 
+## Choix techniques et difficultés rencontrées
+
+**Choix techniques**
+- Utilisation de Vue 3 avec Vite pour le frontend, plus rapide et moderne que Vue 2
+- Nginx comme reverse proxy en production pour router les requêtes vers les bons services sans exposer leurs ports
+- Séparation dev/prod avec deux Docker Compose distincts pour isoler les environnements
+- MongoDB comme base de données unique partagée entre les services via le réseau Docker interne
+
+**Difficultés rencontrées**
+- La communication entre conteneurs nécessitait d'utiliser les noms de services Docker plutôt que `localhost` dans les variables d'environnement
+- La gestion du secret JWT devait rester compatible avec les trois modes : développement, production et les deux à la fois
+- Le build multi-stage du frontend nécessitait une configuration Nginx spécifique pour gérer le routing côté client de Vue Router
+
+**Solutions apportées**
+- Remplacement de `localhost` par les noms de conteneurs (`urbancart-auth`, `urbancart-product`, etc.) dans les `.env`
+- Injection du secret JWT via un fichier `secrets/jwt_secret.txt` lu au démarrage du service
+- Ajout d'un `nginx.conf` personnalisé avec `try_files` pour le routing Vue et les règles `proxy_pass` pour chaque service
+
 ## Conclusion
 
 Ce projet m'a permis de mettre en pratique :
