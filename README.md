@@ -187,3 +187,16 @@ db.products.insertMany([
   { name: "Cargo Pants", price: 79.99, description: "Poches multiples, coupe droite" }
 ])
 ```
+
+---
+
+## Conclusion
+
+Ce projet m'a permis de mettre en pratique :
+
+- La conteneurisation d'une application avec Docker
+- L'orchestration de plusieurs services avec Docker Compose
+- La gestion d'une architecture microservices
+- La mise en place d'environnements distincts (développement et production)
+
+Il illustre également l'importance de la séparation des responsabilités entre les services et l'utilisation de bonnes pratiques en termes de sécurité et de performance.
