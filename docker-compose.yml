@@ -1,0 +1,131 @@
+# Environnement de développement
+services:
+
+  auth-service:
+    image: urbancart-auth:1
+    build:
+      context: ./services/auth-service/
+      dockerfile: Dockerfile.dev
+    container_name: urbancart-auth
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./services/auth-service:/opt/e-commerce/services/auth-service
+      - auth-node-modules:/opt/e-commerce/services/auth-service/node_modules
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  order-service:
+    image: urbancart-order:1
+    build:
+      context: ./services/order-service/
+      dockerfile: Dockerfile.dev
+    container_name: urbancart-order
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./services/order-service:/opt/e-commerce/services/order-service
+      - order-node-modules:/opt/e-commerce/services/order-service/node_modules
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  product-service:
+    image: urbancart-product:1
+    build:
+      context: ./services/product-service/
+      dockerfile: Dockerfile.dev
+    container_name: urbancart-product
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./services/product-service:/opt/e-commerce/services/product-service
+      - product-node-modules:/opt/e-commerce/services/product-service/node_modules
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    image: urbancart-frontend:1
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile.dev
+    container_name: urbancart-frontend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - product-service
+      - auth-service
+      - order-service
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+
+  mongodb:
+    image: mongo:8.2.5
+    hostname: mongodb
+    container_name: urbancart-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - urbancart-db:/data/db
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  urbancart-db:
+  auth-node-modules:
+  order-node-modules:
+  product-node-modules:
+
+networks:
+  urbancart-network:
+    driver: bridge

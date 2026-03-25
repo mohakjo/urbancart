@@ -1,0 +1,14 @@
+FROM node:20-alpine
+
+WORKDIR /opt/e-commerce/services/auth-service
+
+RUN npm install -g nodemon
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3001
+
+CMD ["npx", "nodemon", "--watch", ".", "src/app.js"]

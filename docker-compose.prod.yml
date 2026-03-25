@@ -1,0 +1,115 @@
+# Environnement de production
+services:
+
+  auth-service:
+    image: urbancart-auth-prod:1
+    build:
+      context: ./services/auth-service/
+      dockerfile: Dockerfile.prod
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+    secrets:
+      - JWT_SECRET
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  order-service:
+    image: urbancart-order-prod:1
+    build:
+      context: ./services/order-service/
+      dockerfile: Dockerfile.prod
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+    secrets:
+      - JWT_SECRET
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  product-service:
+    image: urbancart-product-prod:1
+    build:
+      context: ./services/product-service/
+      dockerfile: Dockerfile.prod
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    image: urbancart-frontend-prod:1
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:80"
+    depends_on:
+      - product-service
+      - auth-service
+      - order-service
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+
+  mongodb:
+    image: mongo:8.2.5
+    volumes:
+      - urbancart-db:/data/db
+    restart: unless-stopped
+    networks:
+      - urbancart-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+secrets:
+  JWT_SECRET:
+    file: ./secrets/jwt_secret.txt
+
+volumes:
+  urbancart-db:
+
+networks:
+  urbancart-network:
+    driver: bridge
